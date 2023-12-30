@@ -40,7 +40,7 @@
 import {toRaw} from 'vue';
 /* eslint-disable no-undef */
 import { Loader } from '@googlemaps/js-api-loader'
-const GOOGLE_MAPS_API_KEY = process.env.VUE_APP_GOOGLE_MAPS_API_KEY;
+const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
 
 export default {
   name: 'GoogleMap',
@@ -110,7 +110,6 @@ export default {
 
     },
     async mounted(){
-        console.log(GOOGLE_MAPS_API_KEY)
         await this.loader.load()
         this.map = new google.maps.Map(document.getElementById(this.id), this.mapOptions)
         this.map.set('styles', this.mapStyle)
