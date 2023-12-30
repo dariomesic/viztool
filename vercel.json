@@ -1,8 +1,7 @@
 {
     "build": {
         "env": {
-          "VUE_APP_GOOGLE_MAPS_API_KEY": "@your-vercel-secret",
-          "ANOTHER_ENV_VARIABLE": "some_value"
+          "VUE_APP_GOOGLE_MAPS_API_KEY": "@google-maps-api-key"
         }
       },
     "routes": [
