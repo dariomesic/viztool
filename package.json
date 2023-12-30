@@ -1,0 +1,57 @@
+{
+  "name": "VizTool",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "lint": "vue-cli-service lint"
+  },
+  "dependencies": {
+    "@googlemaps/js-api-loader": "^1.15.1",
+    "@linways/table-to-excel": "^1.0.4",
+    "@vueup/vue-quill": "^1.0.1",
+    "chart.js": "^3.9.1",
+    "chartjs-plugin-datalabels": "^2.2.0",
+    "core-js": "^3.6.5",
+    "gopd": "^1.0.1",
+    "html2canvas": "^1.4.1",
+    "jquery": "^3.6.3",
+    "jquery-ui": "^1.13.2",
+    "jspdf": "^2.5.1",
+    "pinia": "^2.0.29",
+    "pivottable": "^2.23.0",
+    "vue": "^3.0.0",
+    "vue-chartjs": "^4.1.1",
+    "vue-router": "^4.1.6",
+    "x2js": "^3.4.4"
+  },
+  "devDependencies": {
+    "@vue/cli-plugin-babel": "~4.5.15",
+    "@vue/cli-plugin-eslint": "~4.5.15",
+    "@vue/cli-service": "~4.5.15",
+    "@vue/compiler-sfc": "^3.0.0",
+    "babel-eslint": "^10.1.0",
+    "eslint": "^6.7.2",
+    "eslint-plugin-vue": "^7.0.0"
+  },
+  "eslintConfig": {
+    "root": true,
+    "env": {
+      "node": true
+    },
+    "extends": [
+      "plugin:vue/vue3-essential",
+      "eslint:recommended"
+    ],
+    "parserOptions": {
+      "parser": "babel-eslint"
+    },
+    "rules": {}
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
+}
