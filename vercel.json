@@ -1,9 +1,4 @@
 {
-    "build": {
-        "env": {
-          "VUE_APP_GOOGLE_MAPS_API_KEY": "@google-maps-api-key"
-        }
-      },
     "routes": [
         { "src": "/api/(.*)", "dest": "http://167.172.100.26/api/$1" }
     ]
