@@ -110,6 +110,7 @@ export default {
 
     },
     async mounted(){
+        console.log(GOOGLE_MAPS_API_KEY)
         await this.loader.load()
         this.map = new google.maps.Map(document.getElementById(this.id), this.mapOptions)
         this.map.set('styles', this.mapStyle)
