@@ -167,7 +167,7 @@ export default {
             })
             DataService.getReport(this.store.report_id).then(  //UPDATE REPORTA
                 (res) => {
-                    this.msg = "http://localhost:8080/reports/?report=" + res[0].hash
+                    this.msg = window.location.href.split("/Home")[0] + "/reports/?report=" + res[0].hash
                 },
                 error => {
                 console.log(error);
