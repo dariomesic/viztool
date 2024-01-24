@@ -191,7 +191,7 @@ export default {
             this.website = true;
             DataService.getReport(this.store.report_id).then(  //UPDATE REPORTA
                 (res) => {
-                    this.msg = "https://viztool.vercel.app/api/reporthash?id=" + res[0].hash
+                    this.msg = window.location.href.split("/Home")[0] + "/api/reporthash?id=" + res[0].hash
                 },
                 error => {
                 console.log(error);
