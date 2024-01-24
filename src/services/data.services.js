@@ -256,7 +256,7 @@ class DataService {
   }
 
   getFrame(hash){
-    return fetch('api/reporthash?id=' + hash, {
+    return fetch('/api/reporthash?id=' + hash, {
       method : "GET",
     })
     .then((response) => {
