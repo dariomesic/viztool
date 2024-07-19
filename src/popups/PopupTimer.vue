@@ -1,6 +1,6 @@
 <template>
   <loading v-if="loading"/>
-  <Transition name="modal">
+  <Transition name="fade" appear>
     <div v-if="show" class="modal-mask" style="margin:0px">
       <div class="modal-wrapper">
         <div class="modal-container" style="width:400px">

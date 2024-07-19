@@ -1,5 +1,5 @@
 <template>
-  <Transition name="modal">
+  <Transition name="fade" appear>
     <div v-if="show" class="modal-mask" style="margin:0px">
       <div class="modal-wrapper">
         <div class="modal-container" style="width:550px">
@@ -157,19 +157,17 @@
             </div>
 
           <div class="modal-content">
-            <div class="modal-footer" style="padding:15px">
-              <div style="display:flex;float:right">
-                <slot name="footer">
-                  <button
-                    class="modal-default-button-apply"
-                    @click="setData()"
-                  >APPLY</button>
-                  <button
-                    class="modal-default-button-close"
-                    @click="$emit('close')"
-                  >CLOSE</button>
-                </slot>
-              </div>
+            <div style="display:flex;float:right">
+              <slot name="footer">
+                <button
+                  class="modal-default-button-apply"
+                  @click="setData()"
+                >APPLY</button>
+                <button
+                  class="modal-default-button-close"
+                  @click="$emit('close')"
+                >CLOSE</button>
+              </slot>
             </div>
           </div>
         </div>
