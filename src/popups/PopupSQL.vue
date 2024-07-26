@@ -37,14 +37,14 @@
                     <select class="format_select" v-model="filter.column">
                       <option v-for="column in selectedColumns" :key="column" :value="column">{{ column }}</option>
                     </select>
-                    <div style="border-width: 0 0 1px 0;;border-color: rgba(0,0,0,.42);padding-left: 2rem;padding-right:2rem">
-                        <select class="format_select" v-model="filter.operator">
-                          <option disabled selected>Sign</option>
-                          <option value="=">=</option>
-                          <option value=">">&gt;</option>
-                          <option value="<">&lt;</option>
-                        </select>
-                      </div>
+                    <div style="border-width: 0 0 1px 0; border-color: rgba(0,0,0,.42); padding-left: 2rem; padding-right:2rem">
+                      <select class="format_select" v-model="filter.operator" :disabled="getColumnType(filter.column) === 'string'">
+                        <option v-if="getColumnType(filter.column) === 'string'" value="LIKE" selected>LIKE</option>
+                        <option v-if="getColumnType(filter.column) !== 'string'" value="=">=</option>
+                        <option v-if="getColumnType(filter.column) !== 'string'" value=">">&gt;</option>
+                        <option v-if="getColumnType(filter.column) !== 'string'" value="<">&lt;</option>
+                      </select>
+                    </div>
                     <div v-if="getColumnType(filter.column) === 'string'" class="input-name" style="width:unset;margin-right: 2rem;border-width: 0 0 1px 0;">
                       <input type="text" placeholder="string" style="margin-left:0px;width:120px" v-model="filter.value">
                       <span class="underline-animation"></span>
@@ -54,10 +54,15 @@
                       <span class="underline-animation"></span>
                     </div>
                     <div v-if="getColumnType(filter.column) === 'date'" class="input-name" style="width:unset;margin-right: 2rem;border-width: 0 0 1px 0;">
-                      <input type="date" placeholder="0" style="margin-left:0px;width:120px" v-model="filter.value">
+                      <input type="datetime-local" placeholder="0" style="margin-left:0px;width:120px" v-model="filter.value">
                       <span class="underline-animation"></span>
                     </div>
-                    <button class="button-delete" @click="removeFilter(index)"><svg focusable="false" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" fill="currentColor" aria-label="Delete" aria-hidden="true" width="16" height="16" viewBox="0 0 32 32" role="img" class="bx--btn__icon"><path d="M12 12H14V24H12zM18 12H20V24H18z"></path><path d="M4 6V8H6V28a2 2 0 002 2H24a2 2 0 002-2V8h2V6zM8 28V8H24V28zM12 2H20V4H12z"></path></svg></button>
+                    <button class="button-delete" @click="removeFilter(index)">
+                      <svg focusable="false" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" fill="currentColor" aria-label="Delete" aria-hidden="true" width="16" height="16" viewBox="0 0 32 32" role="img" class="bx--btn__icon">
+                        <path d="M12 12H14V24H12zM18 12H20V24H18z"></path>
+                        <path d="M4 6V8H6V28a2 2 0 002 2H24a2 2 0 002-2V8h2V6zM8 28V8H24V28zM12 2H20V4H12z"></path>
+                      </svg>
+                    </button>
                   </label>
                 </div>
               </section>
@@ -81,7 +86,12 @@
                         <option v-for="column in selectedColumns" :key="column" :value="column">{{ column }}</option>
                       </select>
                     </div>
-                    <button class="button-delete" @click="removeSummary(index)"><svg focusable="false" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" fill="currentColor" aria-label="Delete" aria-hidden="true" width="16" height="16" viewBox="0 0 32 32" role="img" class="bx--btn__icon"><path d="M12 12H14V24H12zM18 12H20V24H18z"></path><path d="M4 6V8H6V28a2 2 0 002 2H24a2 2 0 002-2V8h2V6zM8 28V8H24V28zM12 2H20V4H12z"></path></svg></button>
+                    <button class="button-delete" @click="removeSummary(index)">
+                      <svg focusable="false" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" fill="currentColor" aria-label="Delete" aria-hidden="true" width="16" height="16" viewBox="0 0 32 32" role="img" class="bx--btn__icon">
+                        <path d="M12 12H14V24H12zM18 12H20V24H18z"></path>
+                        <path d="M4 6V8H6V28a2 2 0 002 2H24a2 2 0 002-2V8h2V6zM8 28V8H24V28zM12 2H20V4H12z"></path>
+                      </svg>
+                    </button>
                   </label>
                 </div>
               </section>
@@ -101,7 +111,12 @@
                         <option value="DESC">DESC</option>
                       </select>
                     </div>
-                    <button class="button-delete" @click="removeSort(index)"><svg focusable="false" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" fill="currentColor" aria-label="Delete" aria-hidden="true" width="16" height="16" viewBox="0 0 32 32" role="img" class="bx--btn__icon"><path d="M12 12H14V24H12zM18 12H20V24H18z"></path><path d="M4 6V8H6V28a2 2 0 002 2H24a2 2 0 002-2V8h2V6zM8 28V8H24V28zM12 2H20V4H12z"></path></svg></button>
+                    <button class="button-delete" @click="removeSort(index)">
+                      <svg focusable="false" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" fill="currentColor" aria-label="Delete" aria-hidden="true" width="16" height="16" viewBox="0 0 32 32" role="img" class="bx--btn__icon">
+                        <path d="M12 12H14V24H12zM18 12H20V24H18z"></path>
+                        <path d="M4 6V8H6V28a2 2 0 002 2H24a2 2 0 002-2V8h2V6zM8 28V8H24V28zM12 2H20V4H12z"></path>
+                      </svg>
+                    </button>
                   </label>
                 </div>
               </section>
@@ -149,8 +164,8 @@
 <script>
 import DataService from '../services/data.services';
 export default {
-  props:['showPopupModal'],
-  emits:['close'],
+  props: ['showPopupModal'],
+  emits: ['close'],
   data() {
     return {
       showPopup: true,
@@ -164,7 +179,7 @@ export default {
       results: null,
     };
   },
-  async created(){
+  async created() {
     this.tables = await DataService.getData()
   },
   computed: {
@@ -173,7 +188,14 @@ export default {
       let sql = `SELECT ${this.selectedColumns.join(', ')} FROM ${this.selectedTable}`;
       const filterClauses = this.filters
         .filter(({ value }) => value)
-        .map(({ column, operator, value }) => `${column} ${operator} '${value}'`);
+        .map(({ column, operator, value }) => {
+          const columnType = this.getColumnType(column);
+          if (columnType === 'string') {
+            return `${column} LIKE '%${value}%'`;
+          } else {
+            return `${column} ${operator} '${value}'`;
+          }
+        });
       if (filterClauses.length) {
         sql += ` WHERE ${filterClauses.join(' AND ')}`;
       }
@@ -226,14 +248,12 @@ export default {
       return this.selectedColumns.includes(column);
     },
     addFilter() {
-      this.filters.push({ column: '', operator: '=', value: '' });
+      // Determine the default operator based on column type
+      const defaultOperator = this.selectedColumns.length > 0 ? (this.getColumnType(this.selectedColumns[0]) === 'string' ? 'LIKE' : '=') : '=';
+      this.filters.push({ column: '', operator: defaultOperator, value: '' });
     },
     removeFilter(index) {
       this.filters.splice(index, 1);
-    },
-    updateFilterValue(event, index, key) {
-      this.filters[index][key] = event.target.value;
-      console.log(this.filters)
     },
     addSummary() {
       this.summaries.push({ function: 'none', column: '' });
@@ -249,8 +269,8 @@ export default {
     },
     async executeQuery() {
       let sql = {
-          "SqlStatement": this.generatedSQL,
-          "ListParameters": "",
+        "SqlStatement": this.generatedSQL,
+        "ListParameters": "",
       }
       let res = await DataService.postSQL(sql)
       this.results = res.dataTable
