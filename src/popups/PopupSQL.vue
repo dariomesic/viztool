@@ -14,23 +14,43 @@
                   <option v-for="table in tables" :key="table.TableName" :value="table.TableName">{{ table.TableName }}</option>
                 </select>
               </section>
-              <section>
-                <h3>Select Columns</h3>
-                <div class="columns-container">
-                  <div
-                    v-for="column in columns"
-                    :key="column.ColumnName"
-                    :class="['column', { selected: isSelected(column.ColumnName) }]"
-                    @click="toggleColumnSelection(column.ColumnName)"
-                  >
-                    {{ column.ColumnName }}
-                    <span v-if="column.IsForeignKey === 'YES'" style="display: inline-flex;">
-                      <!-- Key icon -->
-                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="15"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M12.3212 10.6852L4 19L6 21M7 16L9 18M20 7.5C20 9.98528 17.9853 12 15.5 12C13.0147 12 11 9.98528 11 7.5C11 5.01472 13.0147 3 15.5 3C17.9853 3 20 5.01472 20 7.5Z" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>
-                    </span>
+
+              <div style="display:flex">
+                <section>
+                  <h3>Select Columns for table {{selectedTable}}</h3>
+                  <div class="columns-container">
+                    <div
+                      v-for="column in columns"
+                      :key="column.ColumnName"
+                      :class="['column', { selected: isSelected(column.ColumnName) }]"
+                      @click="toggleColumnSelection(column)"
+                    >
+                      {{ column.ColumnName }}
+                      <span v-if="column.IsForeignKey === 'YES'" style="display: inline-flex;">
+                        <!-- Key icon -->
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="15" style="margin-left:5px"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M12.3212 10.6852L4 19L6 21M7 16L9 18M20 7.5C20 9.98528 17.9853 12 15.5 12C13.0147 12 11 9.98528 11 7.5C11 5.01472 13.0147 3 15.5 3C17.9853 3 20 5.01472 20 7.5Z" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </section>
+                </section>
+                <!-- Related Tables Columns -->
+                <section v-if="relatedTables.length">
+                  <div class="related-columns-container">
+                    <div v-for="(relatedTable, index) in relatedTables" :key="index" class="related-columns-group columns-container">
+                      <h3>Related table column {{ relatedTable.tableName }}</h3>
+                      <div
+                        v-for="column in relatedTable.columns"
+                        :key="column.ColumnName"
+                        :class="['column', { 'related-selected': isRelatedSelected(column, relatedTable.tableName) }]"
+                        @click="toggleRelatedColumnSelection(column, relatedTable.tableName)"
+                      >
+                        {{ column.ColumnName }}
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              </div>
+
               <section>
                 <div style="display: flex;">
                     <h3>Filters</h3>
@@ -127,7 +147,7 @@
             </div>
             <div class="right-panel">
               <h3>Generated SQL</h3>
-              <pre>{{ generatedSQL }}</pre>
+              <p>{{ generatedSQL }}</p>
               <h3>Query Results</h3>
               <div v-if="results">
                 <table class="table table-striped table-bordered">
@@ -167,6 +187,7 @@
 
 <script>
 import DataService from '../services/data.services';
+
 export default {
   props: ['showPopupModal'],
   emits: ['close'],
@@ -180,44 +201,77 @@ export default {
       filters: [],
       summaries: [],
       sortBy: [],
+      relatedTables: [], // Array to hold columns from related tables
+      selectedRelatedColumns: [],
       results: null,
     };
   },
   async created() {
-    this.tables = await DataService.getData()
+    this.tables = await DataService.getData();
   },
   computed: {
     generatedSQL() {
       if (!this.selectedTable || !this.selectedColumns.length) return '';
-      let sql = `SELECT ${this.selectedColumns.join(', ')} FROM ${this.selectedTable}`;
+      
+      // Prefix the selected columns with the table name
+      const prefixedSelectedColumns = this.selectedColumns.map(col => `${this.selectedTable}.${col}`);
+
+      // Prefix the related columns with their respective table names
+      const prefixedRelatedColumns = this.selectedRelatedColumns.map(({ tableName, columnName }) => `${tableName}.${columnName}`);
+
+      // Construct the SELECT clause
+      let sql = `SELECT ${prefixedSelectedColumns.join(', ')}${prefixedRelatedColumns.length > 0 ? ', ' + prefixedRelatedColumns.join(', ') : ''} FROM ${this.selectedTable}`;
+
+      // Build the WHERE clause with filters
       const filterClauses = this.filters
         .filter(({ value }) => value)
         .map(({ column, operator, value }) => {
           const columnType = this.getColumnType(column);
           if (columnType === 'string') {
-            return `${column} LIKE '%${value}%'`;
+            return `${this.selectedTable}.${column} LIKE '%${value}%'`;
           } else {
-            return `${column} ${operator} '${value}'`;
+            return `${this.selectedTable}.${column} ${operator} '${value}'`;
           }
         });
       if (filterClauses.length) {
         sql += ` WHERE ${filterClauses.join(' AND ')}`;
       }
+
+      // Add any summary functions
       if (this.summaries.length) {
         const summaryClauses = this.summaries
           .filter(({ function: func, column }) => func !== 'none' && column)
-          .map(({ function: func, column }) => `${func.toUpperCase()}(${column})`);
+          .map(({ function: func, column }) => `${func.toUpperCase()}(${this.selectedTable}.${column})`);
         if (summaryClauses.length) {
           sql = `SELECT ${summaryClauses.join(', ')} FROM ${this.selectedTable}`;
         }
       }
+
+      // Add sorting
       if (this.sortBy.length) {
-        const sortClauses = this.sortBy.map(({ column, order }) => `${column} ${order}`);
+        const sortClauses = this.sortBy.map(({ column, order }) => `${this.selectedTable}.${column} ${order}`);
         sql += ` ORDER BY ${sortClauses.join(', ')}`;
       }
+
+      // Build the JOIN clauses
+      const joinClauses = [];
+      for(const table of this.relatedTables){
+        const foreignKeyColumn = this.columns.find(col => col.ForeignKeyTable === table.tableName);
+        if (foreignKeyColumn) {
+          joinClauses.push(
+            `INNER JOIN ${table.tableName} ON ${this.selectedTable}.${foreignKeyColumn.ColumnName} = ${table.tableName}.${foreignKeyColumn.ColumnName}`
+          );
+        }
+      }
+
+      if (joinClauses.length) {
+        sql += ` ${joinClauses.join(' ')}`;
+      }
+
       return sql;
     }
   },
+
   methods: {
     updateColumns() {
       const table = this.tables.find(t => t.TableName === this.selectedTable);
@@ -226,6 +280,57 @@ export default {
       this.filters = [];
       this.summaries = [];
       this.sortBy = [];
+      this.relatedTables = [];
+    },
+    async fetchRelatedTables(column) {
+      const relatedTable = await this.getRelatedTable(column);
+      if (relatedTable) {
+        this.relatedTables.push({ 
+          tableName: relatedTable.TableName, 
+          columns: relatedTable.columns,
+        });
+      }
+    },
+    async getRelatedTable(foreignKey) {
+      // Placeholder implementation
+      return this.tables.find(t => t.TableName === foreignKey.ForeignKeyTable);
+    },
+    async toggleRelatedColumnSelection(column, tableName) {
+      const existing = this.selectedRelatedColumns.find(
+        item => item.columnName === column.ColumnName && item.tableName === tableName
+      );
+      if (existing) {
+        this.selectedRelatedColumns = this.selectedRelatedColumns.filter(
+          item => !(item.columnName === column.ColumnName && item.tableName === tableName)
+        );
+      } else {
+        this.selectedRelatedColumns.push({ tableName, columnName: column.ColumnName });
+      }
+    },
+    isRelatedSelected(column, tableName) {
+      return this.selectedRelatedColumns.some(
+        item => item.columnName === column.ColumnName && item.tableName === tableName
+      );
+    },
+    async toggleColumnSelection(column) {
+      const index = this.selectedColumns.indexOf(column.ColumnName);
+      const index_related = this.selectedRelatedColumns.indexOf(column.ColumnName);
+      const index_table_related = this.relatedTables.indexOf(column.ColumnName);
+      if (index > -1) {
+        this.selectedColumns.splice(index, 1);
+        this.selectedRelatedColumns.splice(index_related, 1);
+        this.relatedTables.splice(index_table_related, 1);
+      } else {
+        this.selectedColumns.push(column.ColumnName);
+
+        // Fetch related tables if the selected column is a foreign key
+        if(column.IsForeignKey == "YES"){
+          await this.fetchRelatedTables(column);
+        }
+      }
+    },
+    isSelected(column) {
+      return this.selectedColumns.includes(column);
     },
     getColumnType(columnName) {
       const column = this.columns.find(col => col.ColumnName === columnName);
@@ -240,19 +345,27 @@ export default {
       }
       return '';
     },
-    toggleColumnSelection(column) {
-      const index = this.selectedColumns.indexOf(column);
-      if (index > -1) {
-        this.selectedColumns.splice(index, 1);
-      } else {
-        this.selectedColumns.push(column);
+    generateJoinClauses() {
+      const joinClauses = [];
+      // Create a map of related tables to ensure only one join per table
+      const relatedTables = new Map();
+
+      for (const column of this.selectedColumns) {
+        const columnDefinition = this.columns.find(col => col.ColumnName === column);
+        if (columnDefinition && columnDefinition.IsForeignKey === 'YES') {
+          const relatedTable = this.tables.find(t => t.TableName === columnDefinition.RelatedTable);
+          if (relatedTable && !relatedTables.has(relatedTable.TableName)) {
+            relatedTables.set(relatedTable.TableName, columnDefinition.RelatedColumn);
+            joinClauses.push(
+              `JOIN ${relatedTable.TableName} ON ${this.selectedTable}.${columnDefinition.ColumnName} = ${relatedTable.TableName}.${columnDefinition.RelatedColumn}`
+            );
+          }
+        }
       }
-    },
-    isSelected(column) {
-      return this.selectedColumns.includes(column);
+
+      return joinClauses;
     },
     addFilter() {
-      // Determine the default operator based on column type
       const defaultOperator = this.selectedColumns.length > 0 ? (this.getColumnType(this.selectedColumns[0]) === 'string' ? 'LIKE' : '=') : '=';
       this.filters.push({ column: '', operator: defaultOperator, value: '' });
     },
@@ -276,8 +389,15 @@ export default {
         "SqlStatement": this.generatedSQL,
         "ListParameters": "",
       }
-      let res = await DataService.postSQL(sql)
-      this.results = res.dataTable
+      if (sql.SqlStatement && sql.SqlStatement.trim() !== "") {
+        try {
+          let res = await DataService.postSQL(sql)
+          this.results = res.dataTable
+        } catch (error) {
+          console.error("Error executing SQL query:", error)
+          // Handle the error as needed
+        }
+      }
     }
   },
   watch: {
@@ -298,6 +418,7 @@ export default {
   }
 };
 </script>
+
 
 <style scoped>
 .sql-container {
@@ -321,7 +442,7 @@ export default {
 
 .left-panel,
 .right-panel {
-  padding: 20px;
+  margin: 20px;
   overflow-y: auto;
   overflow-x: auto;
 }
@@ -342,29 +463,19 @@ export default {
 
 .column {
   border: 1px solid #ccc;
-  padding: 5px 2px;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  width: 160px;
-  white-space: nowrap;
+  padding: 5px 5px;
   border-radius: 5px;
   margin: 5px 5px;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
-}
-
-.column:hover {
-  overflow: visible;
-  white-space: normal;
-  height: auto;
-  width: auto;
-  min-width: 160px;
+  height: fit-content;
 }
 
 .column.selected {
   background-color: #d4edda;
   border-color: #1a6e4d;
+  color: #1a6e4d;
 }
 
 h3 {
@@ -383,5 +494,27 @@ h3 {
 
 section {
   margin-top: 1rem;
+}
+
+.related-columns-container {
+  display: flex;
+  gap: 10px;
+}
+
+.related-columns-group {
+  border-left: 1px solid #ccc;
+  padding-left: 10px;
+}
+
+.divider {
+  width: 1px;
+  background-color: #ccc;
+  height: 100%;
+}
+
+.column.related-selected {
+  background: #d4e7ed;
+  color: #00aeef;;
+  border-color: #00aeef; /* Light blue for related selected columns */
 }
 </style>
