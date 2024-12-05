@@ -10,7 +10,7 @@
             </div>
             <a class="close" @click="$emit('close')" style="top:13px"/>
           </div>
-          <div class="modal-content">
+          <div style="padding: 10px 30px;">
             <p v-if="date" style="font-size:12px; float:right">Data shown are as of: {{date}} </p>
             <p>Set refresh frequency: </p>
                   <div style="display:flex;padding:5px;justify-content:center">
